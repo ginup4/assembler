@@ -1,12 +1,14 @@
+import sys
+
 pins = {
     "bus0": (0, "bus 0"),
     "bus1": (1, "bus 1"),
     "bus2": (2, "bus 2"),
-    "bus3": (3, "bus 2"),
-    "bus4": (4, "bus 2"),
-    "bus5": (5, "bus 2"),
-    "bus6": (6, "bus 2"),
-    "bus7": (7, "bus 2"),
+    "bus3": (3, "bus 3"),
+    "bus4": (4, "bus 4"),
+    "bus5": (5, "bus 5"),
+    "bus6": (6, "bus 6"),
+    "bus7": (7, "bus 7"),
     "halt": (8, "halt"),
     "inc": (9, "increment"),
     "goto": (10, "goto"),
@@ -39,11 +41,125 @@ pins = {
     "stackout": (37, "stack out")
 }
 
+commands = []
+output = []
+addresses = []
 
-def main():
+
+def parse():
     with open("input.txt", "r") as file:
         while line := file.readline():
-            cmd, *args = line.split()
+            commands.append(line.split())
+
+
+def big_indexes():
+    global output
+    output = list(range(len(commands)))
+
+
+def command(bigi, statement):
+    cmd = statement[0]
+
+    if cmd == "rga":
+        i = output.index(bigi)
+        output.insert(i + 1, ["ain"])
+
+        argument(i + 1, statement[1])
+
+    elif cmd == "rgb":
+        pass
+    elif cmd == "rgc":
+        pass
+    elif cmd == "rgd":
+        pass
+    elif cmd == "ram":
+        pass
+    elif cmd == "push":
+        pass
+    elif cmd == "pop":
+        pass
+    elif cmd == "halt":
+        pass
+    elif cmd == "hex":
+        pass
+    elif cmd == "bin":
+        pass
+    elif cmd == "tgl":
+        pass
+    elif cmd == "clr":
+        pass
+    elif cmd == "cpif":
+        pass
+    elif cmd == "valif":
+        pass
+
+
+def argument(smalli, arg):
+    if arg.isdecimal():
+        output[smalli].extend(int_to_pins(int(arg)))
+    elif arg[0] == "#":
+        pass
+    elif arg[0] == "$":
+        pass
+    elif arg[0] == "@":
+        pass
+    elif arg[0:3] == "rga":
+        pass
+    elif arg == "rgb":
+        pass
+    elif arg == "rgc":
+        pass
+    elif arg == "rgd":
+        pass
+    elif arg[0:3] == "ram":
+        pass
+    elif arg == "stack":
+        pass
+    else:
+        print("invalid argument:", arg)
+        sys.exit()
+
+
+def int_to_pins(i):
+    ret = []
+    for bit in range(8):
+        if (i // 2 ** bit) % 2 == 1:
+            ret.append("bus" + str(bit))
+    return ret
+
+
+def move_addresses():
+    for i in range(len(output)):
+        try:
+            if type(output[i]) is int:
+                output.pop(i)
+                addresses.append(i)
+        except IndexError:
+            break
+
+
+def translate_addresses():
+    pass
+
+
+def save():
+    with open("output.txt", "w") as file:
+        for line in output:
+            line = [pins[pin] for pin in line]
+            line.sort()
+            line = [pin[1] for pin in line]
+
+            print(*line, sep=", ", file=file)
+
+
+def main():
+    parse()
+    big_indexes()
+    for i, statement in enumerate(commands):
+        command(i, statement)
+    move_addresses()
+    translate_addresses()
+    save()
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ pins = {
 
 commands = []
 output = []
-addresses = []
+addresses = {}
 
 
 def parse():
@@ -54,7 +54,7 @@ def parse():
 
 def big_indexes():
     global output
-    output = list(range(len(commands)))
+    output = list(range(1, len(commands) + 1))
 
 
 def command(bigi, statement):
@@ -63,7 +63,6 @@ def command(bigi, statement):
     if cmd == "rga":
         i = output.index(bigi)
         output.insert(i + 1, ["ain"])
-
         argument(i + 1, statement[1])
 
     elif cmd == "rgb":
@@ -92,29 +91,68 @@ def command(bigi, statement):
         pass
     elif cmd == "valif":
         pass
+    else:
+        print("invalid command:", cmd)
+        sys.exit()
 
 
 def argument(smalli, arg):
     if arg.isdecimal():
         output[smalli].extend(int_to_pins(int(arg)))
+
     elif arg[0] == "#":
         output[smalli].extend(int_to_pins(int(arg[1:], 16)))
+
     elif arg[0] == "$":
         output[smalli].extend(int_to_pins(int(arg[1:], 2)))
+
     elif arg[0] == "@":
-        output[smalli].extend(int(arg[1:]))
-    elif arg[0:3] == "rga":
-        pass
+        output[smalli].append(int(arg[1:]))
+
+    elif arg[:3] == "rga":
+        output[smalli].append("aout")
+        if len(arg) > 3:
+            if arg[3:] == "<<":
+                output[smalli].append("mod1")
+            elif arg[3:] == ">>":
+                output[smalli].append("mod0")
+            elif arg[3:] == "!":
+                output[smalli].extend(["mod0", "mod1"])
+            else:
+                print("no such modifier:", arg[3:])
+                sys.exit()
+
     elif arg == "rgb":
-        pass
+        output[smalli].append("bout")
+
     elif arg == "rgc":
-        pass
+        output[smalli].append("cout")
+
     elif arg == "rgd":
-        pass
-    elif arg[0:3] == "ram":
-        pass
+        output[smalli].append("dout")
+
+    elif arg[:3] == "alu":
+        output[smalli].append("alu")
+        if arg[3:] == "+":
+            pass
+        elif arg[3:] == "|":
+            output[smalli].append("mod0")
+        elif arg[3:] == "<=":
+            output[smalli].append("mod1")
+        elif arg[3:] == "==":
+            output[smalli].extend(["mod0", "mod1"])
+        else:
+            print("no such modifier:", arg[3:])
+            sys.exit()
+
+    elif arg[:4] == "ram:":
+        output[smalli].append("ramout")
+        output.insert(smalli, ["ramaddr"])
+        argument(smalli, arg[4:])
+
     elif arg == "stack":
-        pass
+        output[smalli].append("stackout")
+
     else:
         print("invalid argument:", arg)
         sys.exit()
@@ -132,19 +170,22 @@ def move_addresses():
     for i in range(len(output)):
         try:
             if type(output[i]) is int:
-                output.pop(i)
-                addresses.append(i)
+                addresses[output.pop(i)] = i
         except IndexError:
             break
 
 
-def translate_addresses():
-    pass
+def translate_addresses(line):
+    for pin in line:
+        if type(pin) is int:
+            line.extend(int_to_pins(addresses[pin]))
+            line.remove(pin)
 
 
 def save():
     with open("output.txt", "w") as file:
         for line in output:
+            translate_addresses(line)
             line = [pins[pin] for pin in line]
             line.sort()
             line = [pin[1] for pin in line]
@@ -156,9 +197,8 @@ def main():
     parse()
     big_indexes()
     for i, statement in enumerate(commands):
-        command(i, statement)
+        command(i + 1, statement)
     move_addresses()
-    translate_addresses()
     save()
 
 

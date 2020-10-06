@@ -1,2 +1,3 @@
-rga ram:ram:ram:ram:ram:ram:ram:ram:ram:@2
-rga @2
+push 8
+ram 0 stack
+pop

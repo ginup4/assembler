@@ -59,33 +59,54 @@ def big_indexes():
 
 def command(bigi, statement):
     cmd = statement[0]
+    i = output.index(bigi)
 
     if cmd == "rga":
-        i = output.index(bigi)
         output.insert(i + 1, ["ain"])
         argument(i + 1, statement[1])
 
     elif cmd == "rgb":
-        pass
+        output.insert(i + 1, ["bin"])
+        argument(i + 1, statement[1])
+
     elif cmd == "rgc":
-        pass
+        output.insert(i + 1, ["cin"])
+        argument(i + 1, statement[1])
+
     elif cmd == "rgd":
-        pass
+        output.insert(i + 1, ["din"])
+        argument(i + 1, statement[1])
+
     elif cmd == "ram":
-        pass
+        output.insert(i + 1, ["ain"])
+        output.insert(i + 2, ["ramaddr"])
+        output.insert(i + 3, ["ramin", "aout"])
+        argument(i + 2, statement[1], "rga")
+        argument(i + 1, statement[2])
+
     elif cmd == "push":
-        pass
+        output.insert(i + 1, ["push"])
+        argument(i + 1, statement[1])
+
     elif cmd == "pop":
-        pass
-    elif cmd == "halt":
-        pass
+        output.insert(i + 1, ["pop"])
+
     elif cmd == "hex":
-        pass
+        output.insert(i + 1, ["hexdisp"])
+        argument(i + 1, statement[1])
+
     elif cmd == "bin":
-        pass
+        output.insert(i + 1, ["bindisp"])
+        argument(i + 1, statement[1])
+
     elif cmd == "tgl":
-        pass
+        output.insert(i + 1, ["tgl"])
+        argument(i + 1, statement[1])
+
     elif cmd == "clr":
+        output.insert(i + 1, ["clr"])
+
+    elif cmd == "halt":
         pass
     elif cmd == "cpif":
         pass
@@ -96,7 +117,8 @@ def command(bigi, statement):
         sys.exit()
 
 
-def argument(smalli, arg):
+def argument(smalli, arg, *illegal):
+
     if arg.isdecimal():
         output[smalli].extend(int_to_pins(int(arg)))
 
@@ -110,6 +132,8 @@ def argument(smalli, arg):
         output[smalli].append(int(arg[1:]))
 
     elif arg[:3] == "rga":
+        if "rga" in illegal:
+            illegal_argument(arg)
         output[smalli].append("aout")
         if len(arg) > 3:
             if arg[3:] == "<<":
@@ -123,15 +147,23 @@ def argument(smalli, arg):
                 sys.exit()
 
     elif arg == "rgb":
+        if "rgb" in illegal:
+            illegal_argument(arg)
         output[smalli].append("bout")
 
     elif arg == "rgc":
+        if "rgc" in illegal:
+            illegal_argument(arg)
         output[smalli].append("cout")
 
     elif arg == "rgd":
+        if "rgd" in illegal:
+            illegal_argument(arg)
         output[smalli].append("dout")
 
     elif arg[:3] == "alu":
+        if "alu" in illegal:
+            illegal_argument(arg)
         output[smalli].append("alu")
         if arg[3:] == "+":
             pass
@@ -146,16 +178,25 @@ def argument(smalli, arg):
             sys.exit()
 
     elif arg[:4] == "ram:":
+        if "ram" in illegal:
+            illegal_argument(arg)
         output[smalli].append("ramout")
         output.insert(smalli, ["ramaddr"])
         argument(smalli, arg[4:])
 
     elif arg == "stack":
+        if "stack" in illegal:
+            illegal_argument(arg)
         output[smalli].append("stackout")
 
     else:
         print("invalid argument:", arg)
         sys.exit()
+
+
+def illegal_argument(arg):
+    print("illegal argument:", arg)
+    sys.exit()
 
 
 def int_to_pins(i):

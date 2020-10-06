@@ -98,11 +98,11 @@ def argument(smalli, arg):
     if arg.isdecimal():
         output[smalli].extend(int_to_pins(int(arg)))
     elif arg[0] == "#":
-        pass
+        output[smalli].extend(int_to_pins(int(arg[1:], 16)))
     elif arg[0] == "$":
-        pass
+        output[smalli].extend(int_to_pins(int(arg[1:], 2)))
     elif arg[0] == "@":
-        pass
+        output[smalli].extend(int(arg[1:]))
     elif arg[0:3] == "rga":
         pass
     elif arg == "rgb":

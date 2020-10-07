@@ -112,15 +112,50 @@ def command(bigi, statement):
             argument(i + 1, statement[1])
 
     elif cmd == "cpif":
-        pass
+        output.insert(i + 1, ["ain"])
+        output.insert(i + 2, ["bin"])
+        output.insert(i + 3, ["ain", "alu"])
+        output.insert(i + 4, ["ain", "aout"])
+        output.insert(i + 5, ["busif", "aout"])
+        output.insert(i + 6, ["goto", bigi + 1])
+        output.insert(i + 7, ["goto"])
+        argument(i + 7, statement[1], ["rga", "rgb"])
+        if statement[3] == "==":
+            output[i + 3].extend(["mod0", "mod1"])
+            argument(i + 2, statement[2], ["rga", "rgb"])
+            argument(i + 1, statement[4], ["rga", "rgb"])
+        elif statement[3] == ">=":
+            output[i + 3].append("mod1")
+            argument(i + 2, statement[4], ["rga", "rgb"])
+            argument(i + 1, statement[2], ["rga", "rgb"])
+        elif statement[3] == "<":
+            output[i + 4].extend(["mod0", "mod1"])
+            output[i + 3].append("mod1")
+            argument(i + 2, statement[4], ["rga", "rgb"])
+            argument(i + 1, statement[2], ["rga", "rgb"])
+        elif statement[3] == "<=":
+            output[i + 3].append("mod1")
+            argument(i + 2, statement[2], ["rga", "rgb"])
+            argument(i + 1, statement[4], ["rga", "rgb"])
+        elif statement[3] == ">":
+            output[i + 4].extend(["mod0", "mod1"])
+            output[i + 3].append("mod1")
+            argument(i + 2, statement[2], ["rga", "rgb"])
+            argument(i + 1, statement[4], ["rga", "rgb"])
+        else:
+            print("unknown comparison operator:", statement[3])
+            sys.exit()
 
     elif cmd == "valif":
         output.insert(i + 1, ["busif"] + int_to_pins(int(statement[3]), 3, "if"))
         output.insert(i + 2, ["goto", bigi + 1])
         output.insert(i + 3, ["goto"])
-
         argument(i + 3, statement[1])
         argument(i + 1, statement[2])
+
+    elif cmd == "goto":
+        output.insert(i + 1, ["goto"])
+        argument(i + 1, statement[1])
 
     else:
         print("invalid command:", cmd)
@@ -179,7 +214,7 @@ def argument(smalli, arg, *illegal):
             pass
         elif arg[3:] == "|":
             output[smalli].append("mod0")
-        elif arg[3:] == "<=":
+        elif arg[3:] == ">=":
             output[smalli].append("mod1")
         elif arg[3:] == "==":
             output[smalli].extend(["mod0", "mod1"])
@@ -264,7 +299,6 @@ def main():
         command(i + 1, statement)
     print(*output, sep="\n")
     move_addresses()
-    print(*output, sep="\n")
     print(addresses)
     save()
 

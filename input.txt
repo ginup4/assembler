@@ -1,3 +1,5 @@
-valif @3 #0f 0
-hex #ff
-hex #ee
+cpif @4 16 <= usr
+hex usr
+goto @5
+hex 16
+halt

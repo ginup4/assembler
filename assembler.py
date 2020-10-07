@@ -1,44 +1,44 @@
 import sys
 
 pins = {
-    "bus0": (0, "bus 0"),
-    "bus1": (1, "bus 1"),
-    "bus2": (2, "bus 2"),
-    "bus3": (3, "bus 3"),
-    "bus4": (4, "bus 4"),
-    "bus5": (5, "bus 5"),
-    "bus6": (6, "bus 6"),
-    "bus7": (7, "bus 7"),
-    "halt": (8, "halt"),
-    "inc": (9, "increment"),
-    "goto": (10, "goto"),
-    "ain": (11, "a in"),
-    "aout": (12, "a out"),
-    "mod0": (13, "mod 0"),
-    "mod1": (14, "mod 1"),
-    "alu": (15, "ALU out"),
-    "bin": (16, "b in"),
-    "bout": (17, "b out"),
-    "cin": (18, "c in"),
-    "cout": (19, "c out"),
-    "din": (20, "d in"),
-    "dout": (21, "d out"),
-    "usr": (22, "user out"),
-    "if0": (23, "if addr 0"),
-    "if1": (24, "if addr 1"),
-    "if2": (25, "if addr 2"),
-    "busif": (26, "bus if"),
-    "rng": (27, "RNG out"),
-    "tgl": (28, "screen toggle"),
-    "clr": (29, "screen reset"),
-    "hexdisp": (30, "hex display in"),
-    "bindisp": (31, "bin display in"),
-    "ramin": (32, "RAM in"),
-    "ramout": (33, "RAM out"),
-    "ramaddr": (34, "RAM address in"),
-    "push": (35, "stack push"),
-    "pop": (36, "stack pop"),
-    "stackout": (37, "stack out")
+    "bus0": 44,
+    "bus1": 46,
+    "bus2": 48,
+    "bus3": 50,
+    "bus4": 52,
+    "bus5": 54,
+    "bus6": 56,
+    "bus7": 58,
+    "halt": 60,
+    "inc": 62,
+    "goto": 64,
+    "ain": 66,
+    "aout": 68,
+    "mod0": 70,
+    "mod1": 72,
+    "alu": 74,
+    "bin": 76,
+    "bout": 78,
+    "cin": 80,
+    "cout": 82,
+    "din": 84,
+    "dout": 86,
+    "usr": 90,
+    "if0": 92,
+    "if1": 94,
+    "if2": 96,
+    "busif": 98,
+    "rng": 102,
+    "tgl": 104,
+    "clr": 106,
+    "hexdisp": 108,
+    "bindisp": 110,
+    "ramin": 112,
+    "ramout": 114,
+    "ramaddr": 116,
+    "push": 118,
+    "pop": 120,
+    "stackout": 122
 }
 
 commands = []
@@ -107,11 +107,21 @@ def command(bigi, statement):
         output.insert(i + 1, ["clr"])
 
     elif cmd == "halt":
-        pass
+        output.insert(i + 1, ["halt", "goto"])
+        if len(statement) > 1:
+            argument(i + 1, statement[1])
+
     elif cmd == "cpif":
         pass
+
     elif cmd == "valif":
-        pass
+        output.insert(i + 1, ["busif"] + int_to_pins(int(statement[3]), 3, "if"))
+        output.insert(i + 2, ["goto", bigi + 1])
+        output.insert(i + 3, ["goto"])
+
+        argument(i + 3, statement[1])
+        argument(i + 1, statement[2])
+
     else:
         print("invalid command:", cmd)
         sys.exit()
@@ -189,6 +199,16 @@ def argument(smalli, arg, *illegal):
             illegal_argument(arg)
         output[smalli].append("stackout")
 
+    elif arg == "rng":
+        if "rng" in illegal:
+            illegal_argument(arg)
+        output[smalli].append("rng")
+
+    elif arg == "usr":
+        if "usr" in illegal:
+            illegal_argument(arg)
+        output[smalli].append("usr")
+
     else:
         print("invalid argument:", arg)
         sys.exit()
@@ -199,11 +219,11 @@ def illegal_argument(arg):
     sys.exit()
 
 
-def int_to_pins(i):
+def int_to_pins(i, n=8, pin="bus"):
     ret = []
-    for bit in range(8):
+    for bit in range(n):
         if (i // 2 ** bit) % 2 == 1:
-            ret.append("bus" + str(bit))
+            ret.append(pin + str(bit))
     return ret
 
 
@@ -221,17 +241,20 @@ def translate_addresses(line):
         if type(pin) is int:
             line.extend(int_to_pins(addresses[pin]))
             line.remove(pin)
+            break
 
 
 def save():
-    with open("output.txt", "w") as file:
-        for line in output:
+    if len(output) > 128:
+        print(f"not enough space in program memory for {len(output)} commands")
+    with open("output.mcfunction", "w") as file:
+        for i, line in enumerate(output):
             translate_addresses(line)
             line = [pins[pin] for pin in line]
             line.sort()
-            line = [pin[1] for pin in line]
 
-            print(*line, sep=", ", file=file)
+            for pin in line:
+                print("setblock", pin, 65 - 5 * (i // 32), 29 - 3 * (i % 32), "minecraft:redstone_wall_torch", "replace", file=file)
 
 
 def main():
@@ -239,7 +262,10 @@ def main():
     big_indexes()
     for i, statement in enumerate(commands):
         command(i + 1, statement)
+    print(*output, sep="\n")
     move_addresses()
+    print(*output, sep="\n")
+    print(addresses)
     save()
 
 
